@@ -7,7 +7,4 @@ int2float:
 	vvp int2float
 	gtkwave int2float.vcd
 clean:
-	rm float2int
-	rm float2int.vcd
-	rm int2float
-	rm int2float.vcd
+	rm float2int float2int.vcd int2float int2float.vcd
