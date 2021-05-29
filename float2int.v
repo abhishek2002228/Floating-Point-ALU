@@ -59,7 +59,7 @@ module float2int(float, int, precision_lost, denormal, invalid);
     but, we need to keep track of precision lost too. The information about precision will be lost if we shift out more than 32 bits
     */
     
-    shifter #(56) s1(significand, shift, 1'b1, significand_shifted);
+    shifter #(56, 9) s1(significand, shift, 1'b1, significand_shifted);
     
     assign int_temp = sign ? (~significand_shifted[55:24] + 32'd1) : significand_shifted[55:24];
     assign p_lost = |significand_shifted[23:0]; //shifted out bits may contain info about frac
