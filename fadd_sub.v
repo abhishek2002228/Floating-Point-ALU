@@ -3,11 +3,12 @@
 `include "encoder.v"
 `include "find_grs.v"
 `include "leading_one_detector.v"
-module fadd_sub(in1, in2, op, out, overflow);
+module fadd_sub(in1, in2, op, out, overflow, underflow);
     input wire [31:0] in1, in2;
     input wire op; //1 -> sub, 0 -> add
     output wire [31:0] out;
     output wire overflow;
+    output wire underflow;
 
     wire exchange, signA, signB, sign, hiddenA, hiddenB, op_implied;
     wire denormalA, denormalB, A_isZero, B_isZero;
@@ -74,7 +75,7 @@ module fadd_sub(in1, in2, op, out, overflow);
     begin
         if(calc[27]) //normal but has to be shifted right
         begin //calc[27] accounts for cases normal + denormal -> 1x.xxxx and normal + normal -> 1x.xxxxx , both cases in which result is normal
-            frac_notRounded = {calc[27:2], calc[0]|calc[1]};//play with this
+            frac_notRounded = {calc[27:2], calc[0]|calc[1]};//play with this and check accuracy
             exp_notRounded = temp_exp + 8'd1;
         end
         else
@@ -132,7 +133,7 @@ module fadd_sub(in1, in2, op, out, overflow);
 
     wire AisNaN, BisNaN, AisInf, BisInf, expA_isFF, expB_isFF, manA_isZero, manB_isZero;
     reg outisNaN, outisInf;
-    wire outisInf_used;
+    wire outisInf_used, outisZero;
 
     assign expA_isFF = &expA;
     assign expB_isFF = &expB;
@@ -180,7 +181,9 @@ module fadd_sub(in1, in2, op, out, overflow);
 
     assign expUsed = (outisInf_used | outisNaN) ? (8'hFF) : expRounded;
     assign fracUsed = (outisInf_used) ? 23'd0 : fracRoundAdjusted;
+    assign outisZero = (~|expUsed) & (~|fracUsed);
 
     assign out = {sign, expUsed, fracUsed};
+    assign underflow = (~A_isZero)&(~B_isZero)&(outisZero);
 
 endmodule
